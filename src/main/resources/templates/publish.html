@@ -1,7 +1,7 @@
 <!DOCTYPE HTML>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
-    <title>WanNengDe Community</title>
+    <title>WanNengDe Community-publish</title>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
     <link rel="stylesheet" href="css/bootstrap.min.css"/>
     <link rel="stylesheet" href="css/bootstrap-theme.min.css"/>
@@ -27,9 +27,6 @@
                 <button type="submit" class="btn btn-default">搜索</button>
             </form>
             <ul class="nav navbar-nav navbar-right">
-                <li th:if="${session.user != null}">
-                    <a href="/publish">发布</a>
-                </li>
                 <li th:if="${session.user == null}"><a href="https://github.com/login/oauth/authorize?client_id=b43ddaa19cb0976ea17c&redirect_uri=http://localhost:8080/callback&scope=user&state=1">登录</a></li>
                 <li class="dropdown" th:if="${session.user != null}">
                     <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false" th:text="${session.user.getName()}">我 <span class="caret"></span></a>
@@ -47,25 +44,34 @@
 <div class="container-fluid main">
     <div class="row">
         <div class="col-lg-9 col-md-12 col-sm-12 col-xs-12">
-            <h2><span class="glyphicon glyphicon-list" aria-hidden="true"></span>发现</h2>
+            <h2><span class="glyphicon glyphicon-plus" aria-hidden="true"></span>发布</h2>
             <hr>
-            <div class="media" th:each="question:${questions}">
-                <div class="media-left">
-                  <a href="#">
-                    <img class="media-object img-rounded" th:src="${question.user.avatarUrl}" src="https://avatars0.githubusercontent.com/u/34642096?v=4">
-                  </a>
+            <form action="/publish" method="post">
+                <div class="form-group">
+                    <label for="title">问题标题（简单扼要）：</label>
+                    <input type="text" class="form-control" id="title" th:value="${title}" name="title" placeholder="问题标题......">
                 </div>
-                <div class="media-body">
-                  <h4 class="media-heading" th:text="${question.title}">快速开发spring boot</h4>
-                  <div th:text="${question.tag}"> 问题补充：详细补充您的问题内容，并确保问题描述清晰直观，并提供一些相关的资料</div>
-                  <div class="text-desc">
-                      <span th:text="${question.getLikeCount()}"></span>赞 · <span th:text="${question.getCommentCount()}"></span>回复 · <span th:text="${#dates.format(question.getGmtCreate(),'yyyy年MM月dd日')}"></span>
-                  </div>
+                <div class="form-group">
+                    <label for="description">问题补充（请参照右侧提示）：</label>
+                    <textarea name="description" class="form-control" th:text="${description}" id="description" cols="30" rows="10"></textarea>
                 </div>
-              </div>
+                <div class="form-group">
+                    <label for="title">添加标签：</label>
+                    <input type="text" class="form-control" id="tag" name="tag" th:value="${tag}" placeholder="输入标签，以,号分隔">
+                </div>
+                <div class="container-fluid main">
+                    <div class="row">
+                        <span class="alert alert-danger col-lg-9 col-md-12 col-sm-12 col-xs-12" th:if="${error != null}" th:text="${error}"></span>
+                        <span class="col-lg-9 col-md-12 col-sm-12 col-xs-12" th:if="${error == null}"></span>
+                        <div class="col-lg-3 col-md-12 col-sm-12 col-xs-12">
+                            <button type="submit" class="btn btn-success btn-publish">发布</button>
+                        </div>
+                    </div>
+                </div>
+            </form>
         </div>
         <div class="col-lg-3 col-md-12 col-sm-12 col-xs-12">
-            <h2>热门话题</h2>
+            <h2>问题发起指南</h2>
             <p> ·问题标题：请用精简的语言描述您发布的问题，不超过25字</p>
             <p> ·问题补充：详细补充您的问题内容，并确保问题描述清晰直观，并提供一些相关的资料</p>
             <p> ·选择标签：选择一个或者多个合适的标签，用逗号隔开，每个标签不超过10个字</p>
