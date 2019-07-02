@@ -5,6 +5,7 @@ import cn.wannengde.community.dto.GitHubUser;
 import cn.wannengde.community.mapper.UserMapper;
 import cn.wannengde.community.model.User;
 import cn.wannengde.community.provider.GitHubProvider;
+import cn.wannengde.community.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
@@ -35,6 +36,8 @@ public class AuthorizeController {
 
     @Autowired
     private UserMapper userMapper;
+    @Autowired
+    private UserService userService;
 
     //github网站回调请求函数用于获取accessToken码使用。
     @RequestMapping("/callback")
@@ -56,15 +59,24 @@ public class AuthorizeController {
             user.setName(gitHubUser.getName());
             user.setToken(UUID.randomUUID().toString());
             user.setAccountId(String.valueOf(gitHubUser.getId()));
-            user.setGmtCreate(System.currentTimeMillis());
-            user.setGmtModified(user.getGmtCreate());
             user.setAvatarUrl(gitHubUser.getAvatar_url());
-            userMapper.insert(user);
+            userService.updateOrCreate(user);
             response.addCookie(new Cookie("token",user.getToken()));
             return "redirect:/";
         }else{
             //登录失败，返回首页
             return "redirect:/";
         }
+    }
+
+    @RequestMapping("/logout")
+    public String logout(HttpServletRequest request,
+                         HttpServletResponse response){
+        request.getSession().removeAttribute("user");
+        Cookie cookie = new Cookie("token",null);
+        cookie.setMaxAge(0);
+        response.addCookie(cookie);
+        return "redirect:/";
+
     }
 }

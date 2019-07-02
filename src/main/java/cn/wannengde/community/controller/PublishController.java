@@ -4,10 +4,12 @@ import cn.wannengde.community.mapper.QuestionMapper;
 import cn.wannengde.community.mapper.UserMapper;
 import cn.wannengde.community.model.Question;
 import cn.wannengde.community.model.User;
+import cn.wannengde.community.service.QuestionService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
@@ -27,19 +29,27 @@ public class PublishController {
     @Autowired
     private UserMapper userMapper;
 
+    @Autowired
+    private QuestionService questionService;
+
+
+    @GetMapping("/publish/{id}")
+    public String publish(Model model,
+                          @PathVariable("id")Integer id){
+
+        Question question = questionMapper.findById(id);
+        if(question == null){
+            return "redirect:/publish";
+        }
+        model.addAttribute("title",question.getTitle());
+        model.addAttribute("description",question.getDescription());
+        model.addAttribute("tag",question.getTag());
+        model.addAttribute("id",question.getId());
+        return "publish";
+    }
+
     @GetMapping("/publish")
     public String publish(HttpServletRequest request){
-        Cookie[] cookies = request.getCookies();
-        if(cookies == null){
-            return "publish";
-        }
-        for(Cookie cookie : cookies){
-            if(cookie.getName().equals("token")){
-                String token = cookie.getValue();
-                User user = userMapper.findByToken(token);
-                request.getSession().setAttribute("user",user);
-            }
-        }
         return "publish";
     }
 
@@ -48,6 +58,7 @@ public class PublishController {
             @RequestParam("title")String title,
             @RequestParam("description")String description,
             @RequestParam("tag")String tag,
+            @RequestParam(value = "id",required = false)Integer id,
             HttpServletRequest request,
             Model model){
 
@@ -68,23 +79,7 @@ public class PublishController {
             return "publish";
         }
 
-        Cookie[] cookies = request.getCookies();
-        User user = null;
-        //foreach循环时如果集合为null，会报空指针异常
-        if(cookies == null){
-            model.addAttribute("error","用户未登录，添加失败！");
-            return "publish";
-        }
-        for(Cookie cookie:cookies){
-            if(cookie.getName().equals("token")){
-                String token = cookie.getValue();
-                user = userMapper.findByToken(token);
-                if(user != null){
-                    request.getSession().setAttribute("user",user);
-                }
-                break;
-            }
-        }
+        User user = (User)request.getSession().getAttribute("user");
         if(user == null){
             model.addAttribute("error","用户未登录，添加失败！");
             return "publish";
@@ -93,10 +88,11 @@ public class PublishController {
         question.setTitle(title);
         question.setDescription(description);
         question.setTag(tag);
+        question.setId(id);
         question.setCreator(user.getId());
         question.setGmtCreate(System.currentTimeMillis());
         question.setGmtModified(question.getGmtCreate());
-        questionMapper.create(question);
+        questionService.createOrupdate(question);
         return "redirect:/";
     }
 }
